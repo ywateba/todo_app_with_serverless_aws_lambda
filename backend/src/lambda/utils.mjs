@@ -7,3 +7,14 @@ export function getUserId(event) {
 
   return parseUserId(jwtToken)
 }
+
+export function updateProperties(oldObj, newObj) {
+  for (const key in newObj) {
+      if (newObj.hasOwnProperty(key) && newObj[key] !== null) {
+          if (oldObj.hasOwnProperty(key)) {
+              oldObj[key] = newObj[key];
+          }
+      }
+  }
+  return oldObj;
+}

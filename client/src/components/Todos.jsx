@@ -54,7 +54,7 @@ export const Todos= () => {
                 <Button
                   icon
                   color="blue"
-                  onClick={() => onEditButtonClick(todo.todoId)}
+                  onClick={() => onEditButtonClick(todo)}
                 >
                   <Icon name="pencil" />
                 </Button>
@@ -117,8 +117,8 @@ export const Todos= () => {
     }
   }
 
-  function onEditButtonClick(todoId) {
-    navigate(`/todos/${todoId}/edit`)
+  function onEditButtonClick(todo) {
+    navigate(`/todos/${todo.todoId}/edit`)
   }
 
 

@@ -1,7 +1,7 @@
 
-import middy from '@middy/core'
-import cors from '@middy/http-cors'
-import httpErrorHandler from '@middy/http-error-handler'
+// import middy from '@middy/core'
+// import cors from '@middy/http-cors'
+// import httpErrorHandler from '@middy/http-error-handler'
 import { getUserId } from '../utils.mjs'
 import { updateTodo } from '../../businessLogic/todo.mjs'
 
@@ -31,7 +31,7 @@ export const handler = async (event) => {
     console.info("updated todo:", newTodo)
 
     if (newTodo.hasOwnProperty('attachmentUrl')){
-      if (newTodo.attachmenturl == null | newTodo.attachmenturl == ""){
+      if (newTodo.attachmenturl != null | newTodo.attachmenturl != ""){
         newTodo.attachmenturl = " "
       }
     }

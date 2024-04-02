@@ -52,10 +52,12 @@ export const listItems = async (userId) => {
 
 
 // Function to get a TODO item by its ID
-export const getItemById = async (todoId) => {
+export const getItemById = async (userId,todoId) => {
+  console.info("Get  from dynamo dbvitem with id:", todoId)
   const params = {
     TableName: TODO_TABLE,
     Key: {
+      userId,
       todoId
     }
   };
@@ -63,6 +65,7 @@ export const getItemById = async (todoId) => {
   try {
     const { Item } = await dynamoDbClient.get(params);
     return Item;
+
   } catch (error) {
     console.error('Error getting todo item:', error);
     throw error;

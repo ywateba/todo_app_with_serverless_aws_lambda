@@ -30,6 +30,6 @@
         "description": "(Optional) A URL pointing to an image attached to a task list item"
       }
     },
-    "required": ["name", "dueDate", "done"],
+
     "additionalProperties": false
   }

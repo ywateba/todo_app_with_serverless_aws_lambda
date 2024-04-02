@@ -40,10 +40,10 @@ export const getTodos = async (userId) => {
 
 }
 
-export const getTodo = async (todoId) => {
-
+export const getTodo = async (userId,todoId) => {
+   console.info("Get todo element with id ", todoId)
    try {
-     const item = await getItemById(todoId)
+     const item = await getItemById(userId, todoId)
      return item
    } catch (error) {
     console.info(error)
