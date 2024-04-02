@@ -17,8 +17,7 @@ provider:
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
-    BUCKET: ary-my-bucket #yw-uda-serverless-app
-
+    BUCKET: yw-udagram-app-bucket
   tracing:
     lambda: true
     apiGateway: true
@@ -35,8 +34,8 @@ provider:
 
       - Effect: Allow
         Action:
-          - s3:PutObject
-        Resource: 'arn:aws:s3:::${self:provider.environment.BUCKET}'
+          - s3:*
+        Resource: 'arn:aws:s3:::${self:provider.environment.BUCKET}/*'
 
 
 
@@ -169,78 +168,31 @@ resources:
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index
 
-    # MyBucket:
-    #   Type: 'AWS::S3::Bucket'
-    #   Properties:
-    #     BucketName: ${self:provider.environment.BUCKET}
-    #     PublicAccessBlockConfiguration:
-    #       BlockPublicAcls: false
-    #       BlockPublicPolicy: false
-    #       IgnorePublicAcls: false
-    #       RestrictPublicBuckets: false
 
-    # MyBucketPolicy:
-    #   Type: 'AWS::S3::BucketPolicy'
-    #   Properties:
-    #         Bucket:
-    #           Ref: 'MyBucket'
-    #         PolicyDocument:
-    #             Version: '2012-10-17'
-    #             Statement:
-    #               - Effect: Allow
-    #                 Principal: '*'
-    #                 Action: 's3:*'
-    #                 Resource:
-    #                   Fn::Join:
-    #                     - ''
-    #                     - - 'arn:aws:s3:::'
-    #                       - Ref: 'MyBucket'
-    #                       - '/*'
+    AppBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.BUCKET}
+        OwnershipControls:
+            Rules:
+            - ObjectOwnership: BucketOwnerPreferred
+        # AccessControl: PublicRead
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins:
+                - "*"
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+              AllowedHeaders:
+                - "*"
+              MaxAge: 3000
 
-
-
-
-    # MyWebBucket:
-    #   Type: AWS::S3::Bucket
-    #   Properties:
-    #     BucketName: ${self:provider.environment.BUCKET}
-    #     AccessControl: PublicRead
-    #     PublicAccessBlockConfiguration:
-    #       BlockPublicAcls: false
-    #       BlockPublicPolicy: false
-    #       IgnorePublicAcls: false
-    #       RestrictPublicBuckets: false
-    #     CorsConfiguration:
-    #       CorsRules:
-    #         - AllowedOrigins:
-    #             - "*"
-    #           AllowedMethods:
-    #             - GET
-    #             - PUT
-    #             - POST
-    #             - DELETE
-    #           AllowedHeaders:
-    #             - "*"
-    #           MaxAge: 3000
-
-    # MyWebBucketPolicy:
-    #   Type: AWS::S3::BucketPolicy
-    #   Properties:
-    #     Bucket: !Ref MyWebBucket
-    #     PolicyDocument:
-    #       Statement:
-    #         - Sid: AllowAccessFromSpecificURL
-    #           Effect: Allow
-    #           Principal: '*'
-    #           Action:
-    #             - s3:*
-    #           Resource:
-    #             Fn::Join:
-    #               - ''
-    #               - - 'arn:aws:s3:::'
-    #                 - Ref: 'MyWebBucket'
-    #                 - '/*'
-    #           Condition:
-    #             StringLike:
-    #               aws:Referer:
-    #                 - 'http://localhost:3000/*'
+  
