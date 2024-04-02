@@ -25,7 +25,7 @@ export const listItems = async (userId) => {
   logger.info("Table:", TODO_TABLE)
   const params = {
     TableName: TODO_TABLE,
-    FilterExpression: '#userId = :userId',
+    KeyConditionExpression: '#userId = :userId',
     ExpressionAttributeNames: {
       '#userId': 'userId'
     },
@@ -35,7 +35,7 @@ export const listItems = async (userId) => {
   };
 
   try {
-    const data = await dynamoDbClient.scan(params);
+    const data = await dynamoDbClient.query(params);
 
     //logger.info("Items returned :", data)
     console.info(data.Items)
