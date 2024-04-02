@@ -173,14 +173,8 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.BUCKET}
-        OwnershipControls:
-            Rules:
-            - ObjectOwnership: BucketOwnerPreferred
-        # AccessControl: PublicRead
         PublicAccessBlockConfiguration:
-          BlockPublicAcls: false
           BlockPublicPolicy: false
-          IgnorePublicAcls: false
           RestrictPublicBuckets: false
         CorsConfiguration:
           CorsRules:
@@ -195,4 +189,16 @@ resources:
                 - "*"
               MaxAge: 3000
 
-  
+    AppBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: MyPolicy
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.BUCKET}/*'
+        Bucket: !Ref AppBucket
