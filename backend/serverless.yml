@@ -201,4 +201,8 @@ resources:
               Principal: '*'
               Action: 's3:GetObject'
               Resource: 'arn:aws:s3:::${self:provider.environment.BUCKET}/*'
+              Condition:
+                StringLike:
+                  aws:Referer:
+                    - 'http://localhost:3000/*'
         Bucket: !Ref AppBucket
