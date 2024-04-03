@@ -4,38 +4,25 @@
 import { deleteTodo } from '../../businessLogic/todo.mjs'
 import { getUserId } from '../utils.mjs'
 
-import { createLogger } from '../../utils/logger.mjs'
+import { createLogger ,attachLoggerMiddleware} from '../../utils/logger.mjs'
 
-const logger = createLogger('delete')
+const logger = createLogger('/aws/lambda/deleteTodo')
 
-// export const handler = middy()
-//   .use(httpErrorHandler())
-//   .use(
-//     cors({
-//       credentials: true,
-//       headers: {
-//         'Access-Control-Allow-Origin': '*'
-//       },
-//       origin: "*"
-//     })
-//   )
-  export const handler = async (event) => {
+const lambdahandler = async (event, context) => {
 
-
+    context.logger.info( "Process delete Todo event", { event })
       try {
           const todoId = event.pathParameters.todoId
-          console.info('Delete Todo id ', todoId)
+          context.logger.info('Delete Todo id ', {todoId})
           const userId = getUserId(event)
           if (!userId){
-              console.log("no user id")
+              context.logger.info("No user id")
           }
 
-          const success = await deleteTodo(userId,todoId);
-
-
+          const success = await deleteTodo(userId,todoId, context);
 
           if (success){
-              console.info("Success")
+              context.logger.info("Todo Item deleted")
               return {
                 statusCode: 200,
                 headers: {
@@ -45,9 +32,10 @@ const logger = createLogger('delete')
               }
 
           } else {
-            console.error("Error")
+            context.logger.error("Error")
           }
       } catch (error) {
+        context.logger.error( "Todo item deletion error ", { error})
         return {
           statusCode: 400,
           headers: {
@@ -58,3 +46,5 @@ const logger = createLogger('delete')
 
       }
   }
+
+  export const handler = attachLoggerMiddleware(lambdahandler, logger)

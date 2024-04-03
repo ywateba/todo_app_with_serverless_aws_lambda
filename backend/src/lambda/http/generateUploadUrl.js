@@ -1,73 +1,80 @@
 import AWSXRay from 'aws-xray-sdk-core';
-// import middy from '@middy/core';
-// import cors from '@middy/http-cors';
-// import httpErrorHandler from '@middy/http-error-handler';
+
 import { getUserId } from '../utils.mjs';
-import { generateUploadUrl,getTodo, updateTodo } from "../../businessLogic/todo.mjs";
-import { createLogger } from '../../utils/logger.mjs';
-const logger = createLogger('s3-url')
+import { generateUploadUrl, getTodo, updateTodo } from "../../businessLogic/todo.mjs";
+import { createLogger,attachLoggerMiddleware } from '../../utils/logger.mjs';
+
+
+const logger = createLogger('/aws/s3/url')
+
+
+const lambdahandler = async (event, context) => {
+
+
+  context.logger.info('Request for  S3 PreSignedUrl', { event: event })
+
+  const segment = AWSXRay.getSegment();
+  const subsegment = segment.addNewSubsegment('/aws/s3/url');
+  const todoId = event.pathParameters.todoId
+  // Extracting user ID using "getUserId"
+  const userId = getUserId(event)
+
+  try {
+
+
+    context.logger.info('Request to retrieve old todo item', { userId: userId, todoId: todoId })
+
+    const old_todo = await getTodo(userId, todoId,context)
 
 
 
 
-// export const handler = middy()
+    context.logger.info('Request Upload Url')
 
-//   .use(httpErrorHandler())
-//   .use(
-//     cors({
-//       credentials: true,
-//       headers: {
-//         'Access-Control-Allow-Origin': '*'
-//       },
-//       origin: "*"
-//     })
-//   )
-//   .
-export const  handler = async (event) => {
+    const uploadUrl = await generateUploadUrl(todoId + ".jpeg",context);
 
-    const segment = AWSXRay.getSegment();
-    const subsegment = segment.addNewSubsegment('getPreSignedurl');
+    context.logger.info('Generated Upload Url', { uploadUrl })
 
-    console.info('Create S3 Url', { event: event })
-    const todoId = event.pathParameters.todoId
-    try {
-
-      // Extracting user ID using "getUserId"
-      const userId = getUserId(event)
-
-      const old_todo = await  getTodo(userId,todoId)
+    const attachmentUrl = uploadUrl.split("?")[0]
 
 
-      const uploadUrl = await generateUploadUrl(todoId+".jpeg");
+    context.logger.info('Attachement Url', { attachmentUrl })
 
-      old_todo.attachmentUrl = uploadUrl.split("?")[0]
+    old_todo.attachmentUrl = attachmentUrl
 
-      await updateTodo(old_todo)
 
-      // End the subsegment
-      subsegment.close();
+    context.logger.info('Update Item with attachemment url')
 
-      // Return the presigned URL in the response
-      return {
-        statusCode: 200,
-        headers: {
-          'Access-Control-Allow-Origin': '*'
+    await updateTodo(old_todo, context)
+
+    context.logger.info('Item  updatedwith attachemment url')
+
+    // End the subsegment
+    subsegment.close();
+
+    // Return the presigned URL in the response
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
       },
-        body: JSON.stringify({ uploadUrl })
-      };
-    } catch (error) {
-      console.error('Error handling Lambda event:', error);
+      body: JSON.stringify({ uploadUrl })
+    };
+  } catch (error) {
+      context.logger.error('Error with attachment url :', {error});
       // End the subsegment with an error
       subsegment.addError(error);
       return {
         statusCode: 500,
         headers: {
           'Access-Control-Allow-Origin': '*'
-      },
+        },
         body: JSON.stringify({ error: 'Failed to process event' })
       };
-    } finally {
+  } finally {
       // Close the segment
       segment.close();
-    }
   }
+}
+
+export const handler = attachLoggerMiddleware(lambdahandler, logger)

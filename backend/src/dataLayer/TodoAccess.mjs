@@ -7,22 +7,16 @@ const dynamoDbXRay = AWSXRay.captureAWSv3Client(dynamoDb)
 const dynamoDbClient = DynamoDBDocument.from(dynamoDbXRay)
 
 
-import { createLogger } from '../utils/logger.mjs'
-
-const logger = createLogger('dynamodb')
-
-
 
 const TODO_TABLE = 'Todos-dev' //process.env.TODO_TABLE
 
 
 
 // Function to get a TODO item by its ID
-export const listItems = async (userId) => {
+export const listItems = async (userId, context) => {
 
-  console.info("list items")
-  console.info("Table:", TODO_TABLE)
-  logger.info("Table:", TODO_TABLE)
+  context.logger.info("List items for user; ", {userId})
+
   const params = {
     TableName: TODO_TABLE,
     KeyConditionExpression: '#userId = :userId',
@@ -33,16 +27,18 @@ export const listItems = async (userId) => {
       ':userId': userId
     }
   };
+  context.logger.info("Params for request", {params})
 
   try {
     const data = await dynamoDbClient.query(params);
+    const items = data.Items
 
-    //logger.info("Items returned :", data)
-    console.info(data.Items)
+    context.logger.info("Items retrived from dynamo db",{items})
 
-    return data.Items
+    return items
+
   } catch (error) {
-    console.info('Error getting todo items:', error);
+    context.logger.info('Error getting todo items:', error);
     throw error;
   }
 }
@@ -52,8 +48,8 @@ export const listItems = async (userId) => {
 
 
 // Function to get a TODO item by its ID
-export const getItemById = async (userId,todoId) => {
-  console.info("Get  from dynamo dbvitem with id:", todoId)
+export const getItemById = async (userId,todoId,context) => {
+  context.logger.info("Get  from dynamo dbvitem with id:", todoId)
   const params = {
     TableName: TODO_TABLE,
     Key: {
@@ -62,43 +58,54 @@ export const getItemById = async (userId,todoId) => {
     }
   };
 
+  context.logger.info("Params for request", {params})
+
   try {
+
+    context.logger.info("Make request to dynamodb")
     const { Item } = await dynamoDbClient.get(params);
+
+    context.logger.info("Item got from dynamo:", {Item})
     return Item;
 
   } catch (error) {
-    console.error('Error getting todo item:', error);
+    context.logger.error('Error getting todo item:', error);
     throw error;
   }
 }
 
 // Function to create a new TODO item
-export const createItem = async (todoItem) => {
-  console.info("create Todo item in dynamo")
+export const createItem = async (todoItem, context) => {
+  context.logger.info("create Todo item in dynamo")
 
   const params = {
     TableName: TODO_TABLE,
     Item: todoItem
   };
 
+  context.logger.info("Params for request", {params})
+
 
 
   try {
+
+    context.logger.info("Make request to dynamodb")
+
     await dynamoDbClient.put(params)
 
-    console.info("Item created in dynamo:", todoItem)
+    context.logger.info("Item created in dynamo:", todoItem)
     return todoItem
 
   } catch (error) {
-    console.error('Error creating todo item:', error);
+    context.logger.error('Error creating todo item:', error);
     throw error;
   }
 }
 
 // Function to update an existing TODO item
-export const updateItem = async (todoItem) => {
-  console.info("update Todo item in dynamo");
-  console.info("item to save: ", todoItem);
+export const updateItem = async (todoItem, context) => {
+  context.logger.info("update Todo item in dynamo");
+  context.logger.info("item to save: ", todoItem);
   const params = {
     TableName: TODO_TABLE,
     Key: {
@@ -116,35 +123,36 @@ export const updateItem = async (todoItem) => {
     }
   };
 
-  // const params = {
-  //   TableName: TODO_TABLE,
-  //   Item: todoItem
-  // };
+  context.logger.info("Params for request", {params})
+
 
   try {
+    context.logger.info("Make request to dynamodb")
     const updated_item = dynamoDbClient.update(params);
-    console.info("Updated item :", updated_item)
+    context.logger.info("Updated item :", updated_item)
     return updated_item
 
   } catch (error) {
-    console.error('Error updating todo item:', error);
+    context.logger.error('Error updating todo item:', error);
     throw error;
   }
 }
 
 // Function to delete a TODO item by its ID
-export const deleteItem = async (userId, todoId) => {
-  console.info("delete Todo item in dynamo")
+export const deleteItem = async (userId, todoId, context) => {
+  context.logger.info("delete Todo item in dynamo")
   const params = {
     TableName: TODO_TABLE,
     Key: { userId, todoId }
   };
+  context.logger.info("Params for request", {params})
 
   try {
+    context.logger.info("Make request to dynamodb")
     await dynamoDbClient.delete(params);
     return true
   } catch (error) {
-    console.error('Error deleting todo item:', error);
+    context.logger.error('Error deleting todo item:', error);
     throw error;
   }
 }

@@ -10,6 +10,16 @@ export function createLogger(loggerName) {
     level: 'info',
     format: winston.format.json(),
     defaultMeta: { name: loggerName },
-    transports: [new winston.transports.Console()]
+    transports: [
+      new winston.transports.Console()
+    ]
   })
 }
+
+// Middleware function to attach logger to the context object
+export const attachLoggerMiddleware = (handler, logger) => {
+  return async (event, context) => {
+      context.logger = logger;
+      return handler(event, context);
+  };
+};

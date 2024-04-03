@@ -16,105 +16,106 @@ export const validateTodoItem = (todoItem) => {
     return true
 }
 
-export const getTodos = async (userId) => {
+export const getTodos = async (userId, context) => {
 
-    console.info( "Get todos for user", userId)
-    console.info( "Call to dynamo function")
+    context.logger.info("Get todos for user", userId)
+
 
     try {
+        context.logger.info("Call to dynamo function")
+        const items = await listItems(userId, context)
 
-        const items = await listItems(userId)
-
-        console.info("Items returned: ", items)
+        context.logger.info("Items returned: ", items)
         return items
 
     } catch (error) {
-        console.error("could not retrieve list")
-        console.error(error)
+        context.logger.error("could not retrieve list", { error })
         throw error
 
     }
 
+}
 
-
+export const getTodo = async (userId, todoId, context) => {
+    context.logger.info("Get todo element with id ", { todoId })
+    try {
+        context.logger.info("Call to dynamo function")
+        const item = await getItemById(userId, todoId, context)
+        return item
+    } catch (error) {
+        context.logger.error("Could not get Item", { error })
+        throw error
+    }
 
 }
 
-export const getTodo = async (userId,todoId) => {
-   console.info("Get todo element with id ", todoId)
-   try {
-     const item = await getItemById(userId, todoId)
-     return item
-   } catch (error) {
-    console.info(error)
-    throw error
-   }
-
-}
-
-export const createTodo = async (item) => {
-    console.info("Create item:", item)
+export const createTodo = async (item, context) => {
+    context.logger.info("Create item:", item)
     try {
         if (!validateTodoItem(item)) {
 
         }
-    console.info("Send request to datalayer")
-    const created_item = await createItem(item)
-    console.info("Item returned by datalayer:", created_item)
+        context.logger.info("Send request to datalayer")
 
-    return created_item
+        const created_item = await createItem(item, context)
+
+        context.logger.info("Item returned by datalayer:", { created_item })
+
+        return created_item
     } catch (error) {
-        console.error(error)
+        context.logger.error(" Could not create item", { item: item, error: error })
         throw error
     }
 }
 
-export const deleteTodo = async (userId,todoId) => {
-    console.log("Delete item with itemID:", todoId)
+export const deleteTodo = async (userId, todoId, context) => {
+    context.logger.info("Delete item with itemID:", { todoId })
     try {
         if (!todoId || typeof todoId !== 'string') {
             throw new Error('Invalid todo ID');
         }
+        context.logger.info("Call to dynamo function")
 
-        await deleteItem(userId,todoId)
-        console.log("Item deleted Successfully")
+        await deleteItem(userId, todoId, context)
+        context.logger.info("Item deleted Successfully")
 
         return true
     } catch (error) {
-        console.info(error)
+        context.logger.error("Error during item deletion:", { error })
         throw error
     }
 }
 
 
-export const updateTodo = async (item) => {
+export const updateTodo = async (item,context) => {
 
-    console.info("Update item received to save :", item)
+    context.logger.info("Update item received to save :", item)
 
-   try {
-     if (!validateTodoItem(item)) {
+    try {
+        if (!validateTodoItem(item)) {
 
-     }
+        }
 
-     const updatedItem = await updateItem(item)
-     console.info("Update item received saved :", updateItem)
-     return updatedItem
-   } catch (error) {
-    console.info(error)
-    throw error
-   }
+        const updatedItem = await updateItem(item,context)
+        context.logger.info("Update item received saved :", { updatedItem })
+        return updatedItem
+    } catch (error) {
+        context.logger.error(error)
+        throw error
+    }
 
 }
 
-export const generateUploadUrl = async (todoId) => {
+export const generateUploadUrl = async (todoId,context) => {
+    context.logger.info("Generate <presignedurl for  :", todoId)
 
-   try {
-     const preSignegUrl = await  filePreSignedUrl(todoId)
-     return preSignegUrl
+    try {
+        const preSignegUrl = await filePreSignedUrl(todoId,context)
+        return preSignegUrl
 
-   } catch (error) {
-    console.error(error)
+    } catch (error) {
+        context.logger.error("Error Occured", {error})
         throw error
-   }
+    }
 
 }

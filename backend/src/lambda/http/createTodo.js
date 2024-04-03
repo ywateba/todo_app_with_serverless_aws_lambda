@@ -4,41 +4,34 @@
 // import httpErrorHandler from '@middy/http-error-handler'
 import { getUserId } from '../utils.mjs'
 import { createTodo } from '../../businessLogic/todo.mjs'
-import { createLogger } from '../../utils/logger.mjs'
+import { createLogger, attachLoggerMiddleware } from '../../utils/logger.mjs'
 import { v4 as uuidv4 } from 'uuid';
 
-const logger = createLogger('create')
+const logger = createLogger('aws/lambda/createTodo')
 
-// export const handler = middy()
-//   .use(httpErrorHandler())
-//   .use(
-//     cors({
-//       credentials: true,
-//       headers: {
-//         'Access-Control-Allow-Origin': '*'
-//       },
-//       origin: "*"
-//     })
-//   )
-export const handler = async (event) => {
-  // Write your logic here
+
+const lambdahandler = async (event, context) => {
+  console.log("here is the context", context)
+  console.info("event", event)
+
+
+  context.logger.info( "Process create Todo event", { event })
 
   try {
     // Parse the newTodo from the request body
     const newTodo = JSON.parse(event.body);
-    console.info('Create Todo', newTodo)
-
     // Extracting user ID using "getUserId"
     const userId = getUserId(event)
 
-    console.info('UserId :', userId)
+     // Generate a unique ID for the todo item
+     const todoId = uuidv4();
 
-    // Generate a unique ID for the todo item
-    const todoId = uuidv4();
 
-    console.info('TodoId', todoId)
 
-    const attachmentUrl = ""
+    context.logger.info('Create Todo Item', { item: newTodo, userId: userId, todoId: todoId})
+
+
+    const attachmentUrl = " "
 
     // Current timestamp for createdAt
     const createdAt = new Date().toISOString();
@@ -54,10 +47,11 @@ export const handler = async (event) => {
       ...newTodo
     };
 
-    console.info('Todo item to save :', todoItem)
+    context.logger.info('Todo item to save :', {todoItem})
 
-    const item = await createTodo(todoItem)
-    console.info('Todo item created :', item)
+    const item = await createTodo(todoItem, context)
+
+    context.logger.info('Sending Response  :', {item})
 
     return {
       statusCode: 200,
@@ -68,6 +62,7 @@ export const handler = async (event) => {
     };
   } catch (error) {
 
+    context.logger.error("Error for Todo Creation", {error})
     return {
       statusCode: 400,
       headers: {
@@ -78,3 +73,5 @@ export const handler = async (event) => {
 
   }
 }
+
+export const handler = attachLoggerMiddleware(lambdahandler, logger)

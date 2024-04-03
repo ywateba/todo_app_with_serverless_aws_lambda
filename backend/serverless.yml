@@ -11,16 +11,25 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs16.x
-  stage: ${opt:stage, 'dev'}
-  region: ${opt:region, 'us-east-1'}
+  stage: dev
+  region: 'us-east-1'
+
+  httpApi:
+    payload : 2.0
+    metrics: true
+
+
+
+  tracing:
+    lambda: true
+    apiGateway: true
+
 
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
     BUCKET: yw-udagram-app-bucket
-  tracing:
-    lambda: true
-    apiGateway: true
+
 
   iam:
     role:

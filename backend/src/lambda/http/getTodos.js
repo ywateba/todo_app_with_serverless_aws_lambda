@@ -5,25 +5,16 @@
 import { getTodos } from '../../businessLogic/todo.mjs'
 import { getUserId } from '../utils.mjs'
 
-import { createLogger } from '../../utils/logger.mjs'
+import { createLogger ,attachLoggerMiddleware} from '../../utils/logger.mjs'
 
-const logger = createLogger('list')
+const logger = createLogger('aws/lambda/getTodos')
 
-// export const handler = middy()
-//   .use(httpErrorHandler())
-//   .use(
-//     cors({
-//       credentials: true,
-//       headers: {
-//         'Access-Control-Allow-Origin': '*'
-//       },
-//       origin: "*"
-//     })
-//   )
-export const handler = async (event) => {
+
+const lambdahandler = async (event, context) => {
       // Write your logic here
-      console.info('List Todo', event)
-      console.info("listing todooooooooooos")
+      console.info("event", event)
+      context.logger.info('Get Todos', event)
+
       // Parse the newTodo from the request body
 
       try {
@@ -35,15 +26,15 @@ export const handler = async (event) => {
 
 
         if(!userId){
-          console.info("Not Authorized, userID: ", userId)
-          console.info("not Authorized ")
-          throw new Error("Not Authoriyed")
+          context.logger.info("Not Authorized, userID: ", userId)
+
+          throw new Error("Not Authorized")
         }
-        console.info("userId", userId)
+        context.logger.info("userId", userId)
 
 
-        const items = await getTodos(userId)
-        console.info("items: ", items)
+        const items = await getTodos(userId, context)
+        context.logger.info("items: ", items)
 
 
         const response =  {
@@ -54,11 +45,11 @@ export const handler = async (event) => {
           body: JSON.stringify({items})
         }
 
-        console.info("Response", response)
+        context.logger.info("Response", response)
         return response
 
       } catch (error) {
-        console.error("Error occured",error)
+        context.logger.error("Error occured",error)
 
 
         return {
@@ -72,3 +63,6 @@ export const handler = async (event) => {
       }
 
   }
+
+
+export const handler = attachLoggerMiddleware(lambdahandler, logger)

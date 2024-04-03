@@ -3,12 +3,6 @@ import {
   getSignedUrl,
 } from "@aws-sdk/s3-request-presigner";
 
-import { createLogger } from '../utils/logger.mjs'
-
-const logger = createLogger('filestorage')
-
-
-
 
 
 const createPresignedUrlWithClient = ({ region, bucket, key }) => {
@@ -18,7 +12,7 @@ const createPresignedUrlWithClient = ({ region, bucket, key }) => {
 };
 
 // Function to save an image to S3 and return a presigned URL
-export async function filePreSignedUrl(fileName) {
+export async function filePreSignedUrl(fileName,context) {
 
   const BUCKET_NAME = process.env.BUCKET
   const REGION = "us-east-1"
@@ -30,13 +24,13 @@ export async function filePreSignedUrl(fileName) {
 
   try {
 
-
+    context.logger.info('create Presigneurl:');
     const presignedUrl = await createPresignedUrlWithClient(params)
-    console.info('Presigneurl:', presignedUrl);
+    context.logger.info('Presigneurl:', presignedUrl);
 
     return presignedUrl;
   } catch (error) {
-    console.error('Error getting presigneurl:', error);
+    context.logger.error('Error getting presigneurl:', error);
     throw error;
   }
 }
